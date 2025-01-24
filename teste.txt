@@ -1,0 +1,734 @@
+
+
+
+USE ROLE accountadmin;
+
+USE WAREHOUSE compute_wh;
+
+USE SCHEMA db_tabelao.full;
+
+CREATE OR REPLACE PROCEDURE full.pr_carga_inicial_cean_relacionado()
+RETURNS VARCHAR
+LANGUAGE SQL
+AS
+$$
+BEGIN
+    CREATE OR REPLACE TABLE db_tabelao.full.cean_relacionado
+        (
+         id integer primary key, 
+         cean14_padrao varchar(15), 
+         cean14_vinculado varchar(15),
+         ts bigint
+        ) 
+    CLUSTER BY (id)
+    COMMENT = 'tabela de cean relacionado';
+    
+    COPY INTO full.cean_relacionado FROM @FULL.stage_files_tabelao/tabelao/cean_relacionado/ FILE_FORMAT = (TYPE = PARQUET ) MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE;
+
+    RETURN 'OK';
+END;
+$$
+;
+
+CREATE OR REPLACE PROCEDURE full.pr_carga_inicial_custom_prod()
+RETURNS VARCHAR
+LANGUAGE SQL
+AS
+$$
+BEGIN
+
+    CREATE OR REPLACE TABLE db_tabelao.full.custom_prod
+    (
+        id int,
+        id_cli int ,
+        cod_prod varchar(120) ,
+        id_prod int ,
+        cean varchar(20) ,
+        descricao varchar(250) ,
+        ex_prod int ,
+        ex_benef int ,
+        ncm varchar(8) ,
+        ncm_sugerida varchar(8) ,
+        ncm_duvida varchar(1000) ,
+        status_integracao char(1) ,
+        status char(1) ,
+        cadastro_ok smallint,
+        vigente_de datetime ,
+        vigente_ate datetime ,
+        sem_produto char(1) ,
+        ex_tipi char(10) ,
+        id_grupo smallint ,
+        lista_id_tipo varchar(20) ,
+        id_marca smallint ,
+        id_embalagem smallint ,
+        qtd decimal(15, 6) ,
+        pred_aliq numeric(15, 3) ,
+        classe_bebida char(1) ,
+        controle int ,
+        ts bigint,
+        prod_padrao int ,
+        dt_criacao datetime ,
+        questionamento varchar(1000) ,
+        origem_produto int ,
+        cean_original varchar(20) ,
+        quest_config varchar(1000) ,
+        cean_revisado varchar(20) ,
+        status_med tinyint ,
+        ean_lista varchar(900) ,
+        medicamento_lista char(1) ,
+        medicamento_tipo char(1) ,
+        flag_vinculacao_especial int ,
+        revisao_info varchar(500) ,
+        cadastro_fiscal_ok tinyint ,
+        dh_entrega_cadastro_fiscal datetime ,
+        ncm_ex_sugestao varchar(15) ,
+        flag_base_nao_usar int ,
+        flag_medicamento int ,
+        cean14_med varchar(14),
+        tipo_vinculacao char(1) ,
+        flag_fora_agrupamento_prod char(1) ,
+        flag_multiplicacao_origem char(1) ,
+        cean14 varchar(16)
+    )
+    CLUSTER BY (id)
+    ;
+  
+    COPY INTO full.custom_prod FROM @FULL.stage_files_tabelao/tabelao/custom_prod/ FILE_FORMAT = (TYPE = PARQUET ) MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE;
+
+    RETURN 'OK';
+END;
+$$
+;
+
+CREATE OR REPLACE PROCEDURE full.pr_carga_inicial_grupo_config()
+RETURNS VARCHAR
+LANGUAGE SQL
+AS
+$$
+BEGIN
+    CREATE OR REPLACE TABLE db_tabelao.full.grupo_config
+        (
+        id integer,
+        id_grupo integer, 
+        id_trib_inter_config integer, 
+        id_cli int,
+        ts bigint
+        ) 
+        CLUSTER BY (id);
+    
+    COPY INTO full.grupo_config from @FULL.stage_files_tabelao/tabelao/grupo_config/ FILE_FORMAT = (TYPE = PARQUET ) MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE;
+    
+    RETURN 'OK';
+END;
+$$
+;
+
+CREATE OR REPLACE PROCEDURE full.pr_carga_inicial_tributos_internos_cache_config()
+RETURNS VARCHAR
+LANGUAGE SQL
+AS
+$$
+BEGIN
+
+    CREATE OR REPLACE TABLE db_tabelao.full.tributos_internos_cache_config
+        (
+            id int ,
+            id_cliente int ,
+            apelido varchar(50) ,
+            grupo_cache char(1) ,
+            cod_nat_op int ,
+            destinacao varchar(50) ,
+            uf_origem char(2) ,
+            uf_destino char(2) ,
+            cnpj_ex_origem char(14) ,
+            cod_prod_exemplo varchar(120) ,
+            data_recalcular date ,
+            flag_exec tinyint ,
+            alternativo_ex_origem varchar(250) ,
+            id_cliente_prod int ,
+            id_cliente_config_prod int ,
+            frequencia int ,
+            id_mun_origem int ,
+            id_mun_destino int ,
+            dias_futuros int ,
+            id_config_principal int ,
+            id_config_icms int ,
+            id_config_ipi int ,
+            id_config_pis int ,
+            id_config_cofins int ,
+            id_config_antecipacao int ,
+            prioridade smallint ,
+            id_config_manual_pis int ,
+            id_config_manual_cofins int ,
+            id_config_manual_ipi int ,
+            id_config_manual_antecipacao int ,
+            cnae_destinatario varchar(7) ,
+            grupo_str varchar(4000) ,
+            id_config_setor int ,
+            ent_sai char(1) ,
+            id_rel_futuro int ,
+            finalidade int ,
+            total_produtos int ,
+            total_produtos_calculados int ,
+            flag_desconsiderar int ,
+            origem_produto_alternativo int ,
+            cenario_ind_prod char(1) ,
+            id_prod_adic varchar(900) ,
+            st_cest tinyint ,
+            dt_criacao datetime ,
+            origem_criacao varchar(50) ,
+            flag_homolog tinyint ,
+            trib_cigarro_calculo int ,
+            criacao_automatica tinyint ,
+            flag_revisao tinyint ,
+            flag_origem_escrituracao tinyint ,
+            cenario_inativo char(1) 
+        )
+        CLUSTER BY (id);
+    
+    COPY INTO full.tributos_internos_cache_config from @FULL.stage_files_tabelao/tabelao/tributos_internos_cache_config/ FILE_FORMAT = (TYPE = PARQUET ) MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE;    
+    
+    RETURN 'OK';
+END;
+$$
+    
+CREATE OR REPLACE PROCEDURE full.pr_carga_inicial_agrupamento_produtos()
+RETURNS VARCHAR
+LANGUAGE SQL
+AS
+$$
+BEGIN
+
+    CREATE OR REPLACE TABLE db_tabelao.full.agrupamento_produtos (
+        cod_prod varchar(250), 
+        origem_produto int, 
+        id_cli int
+    )
+    CLUSTER BY (cod_prod, origem_produto);
+    
+    COPY INTO db_tabelao.full.agrupamento_produtos from @FULL.stage_files_tabelao/tabelao/agrupamento_produtos/ FILE_FORMAT = (TYPE = PARQUET ) MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE;
+
+    RETURN 'OK';
+END;
+$$
+
+CREATE OR REPLACE PROCEDURE full.pr_carga_inicial_tributos_internos_cache_st()
+RETURNS VARCHAR
+LANGUAGE SQL
+AS
+$$
+BEGIN
+    CREATE OR REPLACE TABLE db_tabelao.full.tributos_internos_cache_st
+        (
+            id int,
+            id_tributos_internos int ,
+            p_red_bc decimal(6, 2) ,
+            aliquota_st varchar(10) ,
+            mva decimal(18, 2) ,
+            mva_ajustado decimal(18, 2) ,
+            mva_lista_positiva_ajustado decimal(18, 2) ,
+            mva_lista_negativa_ajustado decimal(18, 2) ,
+            mva_lista_neutra_ajustado decimal(18, 2) ,
+            valor_pauta numeric(12, 4) ,
+            vigencia_de date ,
+            vigencia_ate date ,
+            regra int ,
+            regra_bc int ,
+            regra_aliq int ,
+            data datetime ,
+            ts bigint,
+            id_config int ,
+            dispositivo_legal varchar(900) ,
+            observacoes varchar(900) ,
+            hash_config char(32) ,
+            id_cache_rep char(32) ,
+            unidade_pauta char(6) ,
+            hash_retorno_erp char(32) ,
+            carga_media decimal(18, 2) ,
+            hash_retorno_erp_debug varchar(8000) ,
+            flag_revisao tinyint ,
+            bc_composicao char(3) ,
+            generico varchar(400) ,
+            severidade int ,
+            estatisticas varchar(900) ,
+            fcp decimal(12, 4) ,
+            bc_composicao_fcp varchar(4) 
+        )
+        CLUSTER BY (id);  
+    
+    COPY INTO full.tributos_internos_cache_st from @FULL.stage_files_tabelao/tabelao/tributos_internos_cache_st/ FILE_FORMAT = (TYPE = PARQUET ) MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE;    
+
+    RETURN 'OK';
+END;
+$$
+
+
+CREATE OR REPLACE PROCEDURE full.pr_carga_inicial_clientes()
+RETURNS VARCHAR
+LANGUAGE SQL
+AS
+$$
+BEGIN
+
+    CREATE OR REPLACE TABLE db_tabelao.full.clientes
+    (
+        id integer, flag_setor varchar, situacao varchar, deletado varchar, flag_retorno_ipi varchar
+    )
+    CLUSTER BY (id);
+    
+    COPY INTO db_tabelao.full.clientes from @FULL.stage_files_tabelao/tabelao/clientes/ FILE_FORMAT = (TYPE = PARQUET ) MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE;    
+ 
+    RETURN 'OK';
+END;
+$$
+
+CREATE OR REPLACE PROCEDURE full.pr_carga_inicial_ts_atual()
+RETURNS VARCHAR
+LANGUAGE SQL
+AS
+$$
+BEGIN
+    CREATE OR REPLACE TABLE full.ts_atual
+    (
+        ts bigint, 
+        datahora varchar(20)
+    )
+    CLUSTER BY (ts);
+    
+    COPY INTO full.ts_atual from @FULL.stage_files_tabelao/tabelao/ts_diario/ FILE_FORMAT = (TYPE = PARQUET ) MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE;    
+
+    RETURN 'OK';
+END;
+$$
+
+--- select * from full.ts_atual 
+
+CREATE OR REPLACE PROCEDURE full.pr_carga_inicial_grupo_custom_prod()
+RETURNS VARCHAR
+LANGUAGE SQL
+AS
+$$
+BEGIN
+
+    CREATE OR REPLACE TABLE db_tabelao.full.grupo_custom_prod
+    (
+        id integer,
+        id_grupo integer, 
+        id_custom_prod integer, 
+        id_cli int,
+        ts bigint
+    )
+    CLUSTER BY (id);
+    
+    COPY INTO full.grupo_custom_prod from @FULL.stage_files_tabelao/tabelao/grupo_custom_prod/ FILE_FORMAT = (TYPE = PARQUET ) MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE;
+
+    RETURN 'OK';
+END;
+$$
+
+
+CREATE OR REPLACE PROCEDURE full.pr_carga_inicial_ex_origem_cache_familia()
+RETURNS VARCHAR
+LANGUAGE SQL
+AS
+$$
+BEGIN
+    
+    CREATE OR REPLACE TABLE full.ex_origem_cache_familia(
+        id integer, 
+        id_ex_origem integer,
+        id_familia integer,
+        ordem integer, 
+        ordem_inversa integer)
+    cluster by (id);
+    
+    COPY INTO full.ex_origem_cache_familia from @FULL.stage_files_tabelao/tabelao/ex_origem_cache_familia/ FILE_FORMAT = (TYPE = PARQUET ) MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE;
+
+    RETURN 'OK';
+END;
+$$
+
+
+CREATE OR REPLACE PROCEDURE full.pr_carga_inicial_tributos_internos_cache()
+RETURNS VARCHAR
+LANGUAGE SQL
+AS
+$$
+BEGIN
+
+    CREATE OR REPLACE TABLE db_tabelao.full.tributos_internos_cache
+    (
+        id int,
+        id_cliente int ,
+        id_config int ,
+        cod_produto varchar(120) ,
+        cst char(3) ,
+        cfop char(4) ,
+        p_red_bc decimal(6, 2) ,
+        aliquota varchar(10) ,
+        valor_pauta numeric(12, 4) ,
+        vigencia_de date ,
+        vigencia_ate date ,
+        dispositivo_legal varchar(900) ,
+        observacoes varchar(900) ,
+        id_produto varchar(800) ,
+        regra int ,
+        regra_bc int ,
+        regra_aliq int ,
+        data timestamp ,
+        ts bigint,
+        dif_aliq_nao_contrib varchar(10) ,
+        hash_config char(32) ,
+        tipo_antecipacao char(3) ,
+        encerra_trib char(3) ,
+        responsavel varchar(100) ,
+        perc_fixo decimal(6, 2) ,
+        ant_mva decimal(18, 2) ,
+        ant_mva_ajustado decimal(18, 2) ,
+        ant_mva_lista_positiva_ajustado decimal(18, 2) ,
+        ant_mva_lista_negativa_ajustado decimal(18, 2) ,
+        ant_mva_lista_neutra_ajustado decimal(18, 2) ,
+        id_cache_rep char(32) ,
+        unidade_pauta char(6) ,
+        hash_retorno_erp char(32) ,
+        inf_adicionais varchar(900) ,
+        p_red_aliq decimal(6, 2) ,
+        valor_unid_trib decimal(8, 4) ,
+        p_red_val_imp decimal(6, 2) ,
+        aliq_especifica varchar(10) ,
+        hash_retorno_erp_debug text ,
+        flag_revisao tinyint ,
+        codigo_natureza_receita char(3) ,
+        bc_composicao char(3) ,
+        p_red_bc_interna_dest decimal(8, 2) ,
+        aliq_interna_dest varchar(10) ,
+        cred_indicador_credito int ,
+        cred_cst_entrada varchar(50) ,
+        cred_percentual_credito decimal(12, 4) ,
+        cred_vigencia_de datetime ,
+        cred_vigencia_ate datetime ,
+        cred_dispositivo_legal text,
+        cred_observacoes text,
+        cfop_entrada char(4) ,
+        versao tinyint ,
+        generico varchar(400) ,
+        percentual_diferimento decimal(6, 2) ,
+        aliquota_desonerada varchar(10) ,
+        cred_generico varchar(400) ,
+        severidade int ,
+        estatisticas varchar(900) ,
+        fcp decimal(12, 4) ,
+        cenq varchar(20) ,
+        cest varchar(20) ,
+        uf_dest_cst varchar(60) ,
+        uf_dest_fcp decimal(12, 4) ,
+        uf_dest_dispositivo_legal varchar(900) ,
+        uf_dest_vigencia_de datetime ,
+        uf_dest_vigencia_ate datetime ,
+        uf_dest_aliq_interna_dest decimal(12, 4) ,
+        uf_dest_generico varchar(500) ,
+        uf_dest_perc_partilha_dest decimal(12, 4) ,
+        uf_dest_observacoes varchar(500) ,
+        uf_dest_bc_composicao int ,
+        uf_dest_valor_pauta decimal(14, 4) ,
+        uf_dest_p_red_bc decimal(15, 4) ,
+        uf_dest_unidade_pauta varchar(6) ,
+        origem_produto int ,
+        prioridade smallint ,
+        usuario_aprovacao varchar(30) ,
+        data_aprovacao datetime ,
+        tipo_aprovacao varchar(30) ,
+        bc_composicao_sn_especial varchar(4) ,
+        aliquota_sn_especial decimal(10, 4) ,
+        bc_composicao_fcp varchar(4) ,
+        uf_dest_bc_composicao_fcp varchar(4) ,
+        aliquota_cf decimal(10, 4) ,
+        carga_media decimal(10, 4) 
+    )
+    CLUSTER BY (id);
+    
+    COPY INTO full.tributos_internos_cache from @FULL.stage_files_tabelao/tabelao/tributos_internos_cache/ FILE_FORMAT = (TYPE = PARQUET ) MATCH_BY_COLUMN_NAME=CASE_INSENSITIVE;
+
+    RETURN 'OK';
+END;
+$$
+
+CREATE OR REPLACE PROCEDURE full.pr_carga_inicial_atualiza_schema_dbo()
+RETURNS VARCHAR
+LANGUAGE SQL
+AS
+$$
+BEGIN
+    CREATE OR REPLACE TABLE db_tabelao.dbo.tributos_internos_cache AS select * from db_tabelao.full.tributos_internos_cache;
+    
+    CREATE OR REPLACE TABLE db_tabelao.dbo.tributos_internos_cache_st AS select * from db_tabelao.full.tributos_internos_cache_st;
+    
+    CREATE OR REPLACE TABLE db_tabelao.dbo.grupo_config AS select * from db_tabelao.full.grupo_config;
+    
+    CREATE OR REPLACE TABLE db_tabelao.dbo.grupo_custom_prod AS select * from db_tabelao.full.grupo_custom_prod;
+    
+    CREATE OR REPLACE TABLE db_tabelao.dbo.cean_relacionado AS select * from db_tabelao.full.cean_relacionado;
+    
+    CREATE OR REPLACE TABLE db_tabelao.dbo.custom_prod AS select * from db_tabelao.full.custom_prod;
+    
+    CREATE OR REPLACE TABLE db_tabelao.dbo.clientes AS select * from db_tabelao.full.clientes;
+    
+    CREATE OR REPLACE TABLE db_tabelao.dbo.agrupamento_produtos AS select * from db_tabelao.full.agrupamento_produtos;
+    
+    CREATE OR REPLACE TABLE db_tabelao.dbo.tributos_internos_cache_config AS select * from db_tabelao.full.tributos_internos_cache_config;
+    
+    CREATE OR REPLACE TABLE db_tabelao.dbo.ts_atual AS select * from db_tabelao.full.ts_atual;
+    
+    CREATE OR REPLACE TABLE db_tabelao.dbo.ex_origem_cache_familia AS select * from db_tabelao.full.ex_origem_cache_familia;
+    
+    RETURN 'OK';
+END;
+$$
+
+CREATE OR REPLACE PROCEDURE full.pr_carga_inicial_criar_indices_cluster_dbo()
+RETURNS VARCHAR
+LANGUAGE SQL
+AS
+$$
+BEGIN
+
+    ALTER TABLE dbo.cean_relacionado CLUSTER BY (id);
+    ALTER TABLE dbo.custom_prod CLUSTER BY (id);
+    ALTER TABLE dbo.grupo_config CLUSTER BY (id);
+    ALTER TABLE dbo.grupo_custom_prod CLUSTER BY (id);
+    ALTER TABLE dbo.tributos_internos_cache_st CLUSTER BY (id);
+    ALTER TABLE dbo.tributos_internos_cache CLUSTER BY (id);
+    ALTER TABLE dbo.clientes CLUSTER BY (id);
+    ALTER TABLE dbo.tributos_internos_cache_config CLUSTER BY (id);
+    ALTER TABLE dbo.agrupamento_produtos CLUSTER BY (cod_prod, origem_produto);
+    ALTER TABLE dbo.ts_atual CLUSTER BY (ts);
+    ALTER TABLE dbo.ex_origem_cache_familia CLUSTER BY (id);
+
+    RETURN 'OK';
+END;
+$$
+
+
+CALL full.pr_carga_inicial_limpa_arquivos();
+CALL full.pr_carga_inicial_cean_relacionado();
+CALL full.pr_carga_inicial_custom_prod();
+CALL full.pr_carga_inicial_grupo_config();
+CALL full.pr_carga_inicial_tributos_internos_cache_config();
+CALL full.pr_carga_inicial_agrupamento_produtos();
+CALL full.pr_carga_inicial_tributos_internos_cache_st();
+CALL full.pr_carga_inicial_clientes();
+CALL full.pr_carga_inicial_ts_atual();
+CALL full.pr_carga_inicial_grupo_custom_prod();
+CALL full.pr_carga_inicial_ex_origem_cache_familia();
+CALL full.pr_carga_inicial_tributos_internos_cache();
+CALL full.pr_carga_inicial_atualiza_schema_dbo();
+CALL full.pr_carga_inicial_criar_indices_cluster_dbo();
+
+
+CREATE OR REPLACE PROCEDURE full.pr_carga_inicial_limpa_arquivos()
+RETURNS VARCHAR
+LANGUAGE SQL
+EXECUTE AS CALLER
+AS
+$$
+BEGIN
+
+    rm @FULL.stage_files_tabelao/tabelao/;
+    
+    RETURN 'OK';
+END;
+$$
+--- create table full.log_tasks( id int identity, tarefa varchar(100), datahora datetime);
+
+CREATE OR REPLACE TASK full.task_carga_inicial
+TASK_AUTO_RETRY_ATTEMPTS = 2
+SUSPEND_TASK_AFTER_NUM_FAILURES = 3
+USER_TASK_TIMEOUT_MS = 3600000
+as
+  begin
+    --- CALL full.pr_carga_inicial_limpa_arquivos();
+    INSERT INTO full.log_tasks(tarefa, datahora) VALUES ('task_carga_inicial',CURRENT_TIMESTAMP(2));
+  end;
+;
+
+
+CREATE OR REPLACE TASK full.task_carga_inicial_carrega_cean_relacionado
+AFTER full.task_carga_inicial
+AS
+  BEGIN
+    CALL full.pr_carga_inicial_cean_relacionado();
+  END;
+;
+
+
+CREATE OR REPLACE TASK full.task_carga_inicial_carrega_tributos_internos_cache_config
+AFTER full.task_carga_inicial
+AS
+  BEGIN
+    CALL full.pr_carga_inicial_tributos_internos_cache_config();
+  END;
+;
+
+
+CREATE OR REPLACE TASK full.task_carga_inicial_carrega_custom_prod
+AFTER full.task_carga_inicial
+AS
+  BEGIN
+    CALL full.pr_carga_inicial_custom_prod();
+  END;
+;
+
+
+CREATE OR REPLACE  TASK full.task_carga_inicial_carrega_grupo_config
+AFTER full.task_carga_inicial
+AS
+  BEGIN
+    CALL full.pr_carga_inicial_grupo_config();
+  END;
+;
+
+CREATE OR REPLACE TASK full.task_carga_inicial_carrega_tributos_internos_cache_config
+AFTER full.task_carga_inicial
+AS
+  BEGIN
+    CALL full.pr_carga_inicial_tributos_internos_cache_config();
+  END;
+;
+
+CREATE OR REPLACE TASK full.task_carga_inicial_carrega_agrupamento_produtos
+AFTER full.task_carga_inicial
+AS
+  BEGIN
+    CALL full.pr_carga_inicial_agrupamento_produtos();
+  END;
+;
+
+CREATE OR REPLACE TASK full.task_carga_inicial_carrega_tributos_internos_cache_st
+AFTER full.task_carga_inicial
+AS
+  BEGIN
+    CALL full.pr_carga_inicial_tributos_internos_cache_st();
+  END;
+;
+
+
+CREATE OR REPLACE TASK full.task_carga_inicial_carrega_clientes
+AFTER full.task_carga_inicial
+AS
+  BEGIN
+    CALL full.pr_carga_inicial_clientes();
+  END;
+;
+
+CREATE OR REPLACE TASK full.task_carga_inicial_carrega_ts_atual
+AFTER full.task_carga_inicial
+AS
+  BEGIN
+    CALL full.pr_carga_inicial_ts_atual();
+  END;
+;
+
+CREATE OR REPLACE TASK full.task_carga_inicial_carrega_grupo_custom_prod
+AFTER full.task_carga_inicial
+AS
+  BEGIN
+    CALL full.pr_carga_inicial_grupo_custom_prod();
+  END;
+;
+
+CREATE OR REPLACE TASK full.task_carga_inicial_carrega_ex_origem_cache_familia
+AFTER full.task_carga_inicial
+AS
+  BEGIN
+    CALL full.pr_carga_inicial_ex_origem_cache_familia();
+  END;
+;
+
+
+CREATE OR REPLACE TASK full.task_carga_inicial_carrega_tributos_internos_cache
+AFTER full.task_carga_inicial
+AS
+  BEGIN
+    CALL full.pr_carga_inicial_tributos_internos_cache();
+  END;
+;
+
+CREATE OR REPLACE task full.task_carga_inicial_atualiza_schema_dbo
+AFTER 
+full.task_carga_inicial_carrega_cean_relacionado, 
+full.task_carga_inicial_carrega_tributos_internos_cache_config,
+full.task_carga_inicial_carrega_custom_prod, 
+full.task_carga_inicial_carrega_grupo_config, 
+full.task_carga_inicial_carrega_agrupamento_produtos,
+full.task_carga_inicial_carrega_tributos_internos_cache_st, 
+full.task_carga_inicial_carrega_tributos_internos_cache,
+full.task_carga_inicial_carrega_clientes, 
+full.task_carga_inicial_carrega_ts_atual,
+full.task_carga_inicial_carrega_grupo_custom_prod, 
+full.task_carga_inicial_carrega_ex_origem_cache_familia
+AS
+  BEGIN
+    INSERT INTO full.log_tasks(tarefa, datahora) VALUES ('task_carga_inicial_atualiza_schema_dbo',CURRENT_TIMESTAMP(2));
+    CALL full.pr_carga_inicial_atualiza_schema_dbo();
+  END;
+;
+
+CREATE OR REPLACE task full.task_carga_inicial_criar_indices_cluster_dbo
+AFTER full.task_carga_inicial_atualiza_schema_dbo
+AS
+  BEGIN
+    INSERT INTO full.log_tasks(tarefa, datahora) VALUES ('task_carga_inicial_criar_indices_cluster_dbo',CURRENT_TIMESTAMP(2));
+    CALL full.pr_carga_inicial_criar_indices_cluster_dbo();
+  END;
+;
+
+
+ALTER TASK full.task_carga_inicial_carrega_agrupamento_produtos RESUME;
+ALTER TASK full.task_carga_inicial_carrega_ex_origem_cache_familia RESUME;
+ALTER TASK full.task_carga_inicial_carrega_grupo_custom_prod RESUME;
+ALTER TASK full.task_carga_inicial_carrega_custom_prod RESUME;
+ALTER TASK full.task_carga_inicial_carrega_tributos_internos_cache_config RESUME;
+ALTER TASK full.task_carga_inicial_carrega_tributos_internos_cache_st RESUME;
+ALTER TASK full.task_carga_inicial_carrega_ts_atual RESUME;
+ALTER TASK full.task_carga_inicial_carrega_tributos_internos_cache RESUME;
+ALTER TASK full.task_carga_inicial_carrega_grupo_config RESUME;
+ALTER TASK full.task_carga_inicial_carrega_cean_relacionado RESUME;
+ALTER TASK full.task_carga_inicial_carrega_clientes RESUME;
+
+ALTER TASK full.task_carga_inicial_atualiza_schema_dbo RESUME;
+ALTER TASK full.task_carga_inicial_criar_indices_cluster_dbo RESUME;
+
+execute task full.task_carga_inicial;
+
+
+SELECT *
+  FROM TABLE(INFORMATION_SCHEMA.TASK_HISTORY())
+ORDER BY 10 DESC;
+
+
+/*
+CREATE OR REPLACE TASK task_a
+SCHEDULE = '1 MINUTE'
+TASK_AUTO_RETRY_ATTEMPTS = 2
+SUSPEND_TASK_AFTER_NUM_FAILURES = 3
+USER_TASK_TIMEOUT_MS = 60
+CONFIG='{"environment": "production", "path": "/prod_directory/"}'
+as
+  begin
+    call system$set_return_value('task_a successful');
+  end;
+;
+
+CREATE OR REPLACE TASK task_customer_table
+USER_TASK_TIMEOUT_MS = 60
+AFTER TASK_A
+AS
+  BEGIN
+    LET VALUE := (SELECT customer_id FROM ref_cust_table
+    WHERE cust_name = "Jane Doe";);
+    INSERT INTO customer_table VALUES('customer_id',:value);
+  END;
+;
+
+*/
+
